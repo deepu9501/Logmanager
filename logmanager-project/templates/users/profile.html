@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-md-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Profile Information</h6>
+                    <a href="{% url 'web_users:profile_edit' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="avatar-circle">
+                                <span class="initials">{{ user.first_name|slice:"0:1" }}{{ user.last_name|slice:"0:1" }}</span>
+                            </div>
+                            <h4 class="mt-3">{{ user.first_name }} {{ user.last_name }}</h4>
+                            <p class="text-primary">{{ user.get_role_display }}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row mb-2">
+                                <div class="col-sm-4 font-weight-bold">Username:</div>
+                                <div class="col-sm-8">{{ user.username }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 font-weight-bold">Email:</div>
+                                <div class="col-sm-8">{{ user.email }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 font-weight-bold">Department:</div>
+                                <div class="col-sm-8">{{ user.department|default:"Not specified" }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 font-weight-bold">Phone:</div>
+                                <div class="col-sm-8">{{ user.phone|default:"Not specified" }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 font-weight-bold">Joined:</div>
+                                <div class="col-sm-8">{{ user.date_joined|date:"F d, Y" }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4 font-weight-bold">Last Login:</div>
+                                <div class="col-sm-8">{{ user.last_login|date:"F d, Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Preferences -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Notification Preferences</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-sm-8">Email Notifications</div>
+                        <div class="col-sm-4">
+                            {% if user.notification_email %}
+                            <span class="badge badge-success">Enabled</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Disabled</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-8">SMS Notifications</div>
+                        <div class="col-sm-4">
+                            {% if user.notification_sms %}
+                            <span class="badge badge-success">Enabled</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Disabled</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="col-md-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Activities</h6>
+                </div>
+                <div class="card-body">
+                    {% if user_activities %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in user_activities %}
+                                <tr>
+                                    <td>{{ activity.action }}</td>
+                                    <td>{{ activity.created_at|date:"M d, H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center my-3">No recent activities found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Account Security -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Account Security</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'password_reset' %}" class="btn btn-primary">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 150px;
+    height: 150px;
+    background-color: #4e73df;
+    text-align: center;
+    border-radius: 50%;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.initials {
+    position: relative;
+    font-size: 52px;
+    line-height: 150px;
+    color: #fff;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

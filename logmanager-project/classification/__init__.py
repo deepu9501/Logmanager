@@ -1,0 +1,3 @@
+"""
+Classification app initialization.
+""" 

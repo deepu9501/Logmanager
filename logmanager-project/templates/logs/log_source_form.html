@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Log Source{% else %}Add Log Source{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if form.instance.pk %}Edit Log Source{% else %}Add Log Source{% endif %}
+        </h1>
+        <a href="{% url 'logs:source_list' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Sources
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                {% if form.instance.pk %}
+                Editing source: {{ form.instance.name }}
+                {% else %}
+                Create a new log source
+                {% endif %}
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="post" class="user">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}">Source Name*</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="text-danger small">
+                        {{ form.name.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="text-muted small">{{ form.name.help_text }}</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.type.id_for_label }}">Source Type*</label>
+                    {{ form.type }}
+                    {% if form.type.errors %}
+                    <div class="text-danger small">
+                        {{ form.type.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="text-muted small">{{ form.type.help_text }}</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.description.id_for_label }}">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="text-danger small">
+                        {{ form.description.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="text-muted small">{{ form.description.help_text }}</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="custom-control custom-checkbox small">
+                        {{ form.is_active }}
+                        <label class="custom-control-label" for="{{ form.is_active.id_for_label }}">
+                            Active Source
+                        </label>
+                    </div>
+                    <div class="text-muted small">{{ form.is_active.help_text }}</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Advanced Configuration (Optional)</label>
+                    <div class="card mb-4 py-3 border-left-info">
+                        <div class="card-body">
+                            <div class="small text-info mb-3">
+                                <i class="fas fa-info-circle"></i> Configure additional settings for this log source.
+                            </div>
+                            
+                            <div class="form-group mb-0">
+                                <label for="retention_days">Log Retention Period (days)</label>
+                                <input type="number" id="retention_days" name="retention_days" class="form-control" value="30">
+                                <div class="text-muted small">How long logs from this source should be kept before automatic deletion. Leave blank for system default.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group d-flex justify-content-between">
+                    <a href="{% url 'logs:source_list' %}" class="btn btn-light btn-icon-split">
+                        <span class="icon text-gray-600">
+                            <i class="fas fa-arrow-left"></i>
+                        </span>
+                        <span class="text">Cancel</span>
+                    </a>
+                    
+                    <button type="submit" class="btn btn-primary btn-icon-split">
+                        <span class="icon text-white-50">
+                            <i class="fas fa-save"></i>
+                        </span>
+                        <span class="text">
+                            {% if form.instance.pk %}Update Source{% else %}Create Source{% endif %}
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add Bootstrap form classes
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add classes to text inputs
+        document.getElementById('{{ form.name.id_for_label }}').classList.add('form-control');
+        document.getElementById('{{ form.type.id_for_label }}').classList.add('form-control');
+        document.getElementById('{{ form.description.id_for_label }}').classList.add('form-control');
+        
+        // Add classes to checkbox
+        document.getElementById('{{ form.is_active.id_for_label }}').classList.add('custom-control-input');
+        
+        // Auto-focus the name field
+        document.getElementById('{{ form.name.id_for_label }}').focus();
+    });
+</script>
+{% endblock %}

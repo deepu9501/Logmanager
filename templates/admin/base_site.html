@@ -1,0 +1,208 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Log Manager Admin') }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --text-color: #2c3e50;
+        --light-gray: #f8f9fa;
+        --border-color: #dee2e6;
+    }
+
+    /* Header */
+    #header {
+        background: var(--primary-color);
+        color: white;
+        padding: 1rem;
+    }
+
+    #branding h1 {
+        color: white;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+        background: var(--light-gray);
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Main content */
+    #content {
+        padding: 1rem;
+    }
+
+    /* Cards */
+    .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+
+    /* Tables */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+    }
+
+    th, td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+        background: var(--light-gray);
+        font-weight: 600;
+    }
+
+    /* Forms */
+    .form-row {
+        padding: 0.5rem 0;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+    }
+
+    /* Buttons */
+    .button,
+    input[type="submit"],
+    input[type="button"],
+    .submit-row input,
+    a.button {
+        background: var(--accent-color);
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .button:hover,
+    input[type="submit"]:hover,
+    input[type="button"]:hover,
+    .submit-row input:hover,
+    a.button:hover {
+        background: var(--secondary-color);
+    }
+
+    /* Messages */
+    .messagelist li {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 4px;
+    }
+
+    .messagelist li.success {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .messagelist li.error {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    /* Dashboard modules */
+    .dashboard .module {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+
+    .dashboard .module h2 {
+        color: var(--primary-color);
+        margin-top: 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--accent-color);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        #header {
+            padding: 0.5rem;
+        }
+
+        #branding h1 {
+            font-size: 1.2rem;
+        }
+
+        .card,
+        .dashboard .module {
+            padding: 0.5rem;
+        }
+
+        table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        {{ site_header|default:_('Log Manager Administration') }}
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<div class="admin-nav">
+    <a href="{% url 'admin:index' %}" class="nav-link {% if request.path == '/admin/' %}active{% endif %}">
+        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+    </a>
+    <a href="{% url 'admin:users_user_changelist' %}" class="nav-link {% if '/admin/users/user/' in request.path %}active{% endif %}">
+        <i class="fas fa-users me-2"></i>Users
+    </a>
+    <a href="{% url 'admin:logs_logsource_changelist' %}" class="nav-link {% if '/admin/logs/logsource/' in request.path %}active{% endif %}">
+        <i class="fas fa-server me-2"></i>Log Sources
+    </a>
+    <a href="{% url 'admin:logs_logentry_changelist' %}" class="nav-link {% if '/admin/logs/logentry/' in request.path %}active{% endif %}">
+        <i class="fas fa-list me-2"></i>Log Entries
+    </a>
+    <a href="{% url 'admin:notifications_notification_changelist' %}" class="nav-link {% if '/admin/notifications/notification/' in request.path %}active{% endif %}">
+        <i class="fas fa-bell me-2"></i>Notifications
+    </a>
+    <a href="{% url 'admin:notifications_notificationtemplate_changelist' %}" class="nav-link {% if '/admin/notifications/notificationtemplate/' in request.path %}active{% endif %}">
+        <i class="fas fa-file-alt me-2"></i>Notification Templates
+    </a>
+    <a href="{% url 'admin:notifications_notificationchannel_changelist' %}" class="nav-link {% if '/admin/notifications/notificationchannel/' in request.path %}active{% endif %}">
+        <i class="fas fa-broadcast-tower me-2"></i>Notification Channels
+    </a>
+</div>
+{% endblock %}
+
+{% block footer %}
+<div class="footer">
+    <div class="footer-content">
+        <p>&copy; {% now "Y" %} Log Manager. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="{% url 'admin:index' %}">Dashboard</a>
+            <a href="{% url 'admin:password_change' %}">Change Password</a>
+            <a href="{% url 'admin:logout' %}">Logout</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

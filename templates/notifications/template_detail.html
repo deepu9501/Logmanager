@@ -1,0 +1,524 @@
+{% extends 'base.html' %}
+
+{% block title %}Template Details - Log Manager{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'notification_list' %}">Notifications</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'notification_list' %}?tab=templates">Templates</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ template.name|default:"Error Notification Template" }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="fw-bold mb-3 border-start border-primary border-4 ps-3">
+                {{ template.name|default:"Error Notification Template" }}
+            </h1>
+            <p class="lead text-muted">{{ template.description|default:"Template for error notifications with detailed information" }}</p>
+        </div>
+        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+            <button class="btn btn-outline-primary me-2" id="testTemplateBtn">
+                <i class="fas fa-paper-plane me-2"></i>Test
+            </button>
+            <button class="btn btn-primary" id="saveTemplateBtn">
+                <i class="fas fa-save me-2"></i>Save
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Template Editor Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent">
+                    <ul class="nav nav-tabs card-header-tabs" id="templateTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="editor-tab" data-bs-toggle="tab" data-bs-target="#editor" type="button" role="tab" aria-controls="editor" aria-selected="true">
+                                <i class="fas fa-edit me-2"></i>Editor
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview" type="button" role="tab" aria-controls="preview" aria-selected="false">
+                                <i class="fas fa-eye me-2"></i>Preview
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="variables-tab" data-bs-toggle="tab" data-bs-target="#variables" type="button" role="tab" aria-controls="variables" aria-selected="false">
+                                <i class="fas fa-code me-2"></i>Variables
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="templateTabsContent">
+                        <!-- Editor Tab -->
+                        <div class="tab-pane fade show active" id="editor" role="tabpanel" aria-labelledby="editor-tab">
+                            <div class="mb-3">
+                                <label for="templateName" class="form-label">Template Name</label>
+                                <input type="text" class="form-control" id="templateName" value="{{ template.name|default:"Error Notification Template" }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="templateDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="templateDescription" rows="2">{{ template.description|default:"Template for error notifications with detailed information" }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="templateFormat" class="form-label">Format</label>
+                                <select class="form-select" id="templateFormat">
+                                    <option value="html" {% if template.format == 'html' %}selected{% endif %}>HTML</option>
+                                    <option value="text" {% if template.format == 'text' %}selected{% endif %}>Plain Text</option>
+                                    <option value="markdown" {% if template.format == 'markdown' %}selected{% endif %}>Markdown</option>
+                                    <option value="json" {% if template.format == 'json' %}selected{% endif %}>JSON</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="templateSubject" class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="templateSubject" value="{{ template.subject|default:"[Log Alert] Error in {{service_name}}" }}">
+                                <div class="form-text">For email notifications. You can use variables like {{service_name}}.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="templateContent" class="form-label">Template Content</label>
+                                <div class="code-editor-wrapper">
+                                    <textarea class="form-control code-editor" id="templateContent" rows="15">{{ template.content|default:'<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px 15px; border-radius: 4px; margin-bottom: 20px; }
+        .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #eee; font-size: 12px; color: #777; }
+        .metadata { background-color: #f8f9fa; border: 1px solid #eee; border-radius: 4px; padding: 10px 15px; margin: 15px 0; font-family: monospace; }
+        h1 { color: #333; font-size: 24px; margin-top: 0; }
+        h2 { color: #555; font-size: 18px; margin-top: 20px; }
+        .button { display: inline-block; background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{title}}</h1>
+        <p>{{level}} level notification from {{source}}.</p>
+    </div>
+    
+    <p>Dear Administrator,</p>
+    
+    <p>A {{level}} event has been detected in the <strong>{{source}}</strong> system at <strong>{{created_at}}</strong>.</p>
+    
+    <h2>Error Details</h2>
+    <p>{{message}}</p>
+    
+    {% if metadata %}
+    <h2>Additional Information</h2>
+    <div class="metadata">
+        <pre>{{metadata|json_pretty}}</pre>
+    </div>
+    {% endif %}
+    
+    <p>
+        <a href="{{log_url}}" class="button">View in Log Manager</a>
+    </p>
+    
+    <div class="footer">
+        <p>This is an automated message from your Log Management System. Please do not reply to this email.</p>
+        <p>If you wish to unsubscribe from these notifications, please visit your notification settings.</p>
+    </div>
+</body>
+</html>' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview Tab -->
+                        <div class="tab-pane fade" id="preview" role="tabpanel" aria-labelledby="preview-tab">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Preview</h6>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary" id="refreshPreviewBtn">
+                                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="border rounded p-3">
+                                    <div class="preview-container" style="min-height: 500px;">
+                                        <iframe id="previewFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Variables Tab -->
+                        <div class="tab-pane fade" id="variables" role="tabpanel" aria-labelledby="variables-tab">
+                            <div class="mb-3">
+                                <h6 class="mb-3">Available Variables</h6>
+                                <p class="text-muted">You can use these variables in your templates:</p>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Variable</th>
+                                                <th>Description</th>
+                                                <th>Example Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><code>{{title}}</code></td>
+                                                <td>Notification title</td>
+                                                <td>Error in Authentication Service</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>{{message}}</code></td>
+                                                <td>Notification message</td>
+                                                <td>Authentication service timeout after 30s</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>{{level}}</code></td>
+                                                <td>Notification level</td>
+                                                <td>ERROR, WARNING, INFO</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>{{source}}</code></td>
+                                                <td>Source of the notification</td>
+                                                <td>Authentication Service</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>{{created_at}}</code></td>
+                                                <td>Creation timestamp</td>
+                                                <td>2024-03-26 10:12:34</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>{{metadata}}</code></td>
+                                                <td>Additional metadata</td>
+                                                <td>JSON object with details</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>{{service_name}}</code></td>
+                                                <td>Source service name</td>
+                                                <td>auth-service</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>{{log_url}}</code></td>
+                                                <td>URL to view the log</td>
+                                                <td>https://example.com/logs/123</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h6 class="mb-3">Test Data</h6>
+                                    <div class="code-editor-wrapper">
+                                        <textarea class="form-control code-editor" id="testData" rows="10">{
+  "title": "Error in Authentication Service",
+  "message": "Authentication service timeout after 30s",
+  "level": "ERROR",
+  "source": "Authentication Service",
+  "service_name": "auth-service",
+  "created_at": "2024-03-26 10:12:34",
+  "log_url": "https://example.com/logs/123",
+  "metadata": {
+    "service": "auth-service",
+    "instance": "auth-service-pod-3",
+    "error_code": "TIMEOUT_ERROR",
+    "response_time": 30000,
+    "affected_users": 42
+  }
+}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Template Settings Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="fas fa-cog text-primary me-2"></i>Template Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">Settings</h6>
+                        
+                        <div class="mb-3">
+                            <label for="templateChannel" class="form-label">Default Channel</label>
+                            <select class="form-select" id="templateChannel">
+                                <option value="email" {% if template.channel == 'email' %}selected{% endif %}>Email</option>
+                                <option value="slack" {% if template.channel == 'slack' %}selected{% endif %}>Slack</option>
+                                <option value="teams" {% if template.channel == 'teams' %}selected{% endif %}>Microsoft Teams</option>
+                                <option value="webhook" {% if template.channel == 'webhook' %}selected{% endif %}>Webhook</option>
+                            </select>
+                            <div class="form-text">Default notification channel to use with this template.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Template Category</label>
+                            <select class="form-select" id="templateCategory">
+                                <option value="error" {% if template.category == 'error' %}selected{% endif %}>Error Notifications</option>
+                                <option value="warning" {% if template.category == 'warning' %}selected{% endif %}>Warning Notifications</option>
+                                <option value="info" {% if template.category == 'info' %}selected{% endif %}>Info Notifications</option>
+                                <option value="summary" {% if template.category == 'summary' %}selected{% endif %}>Summary Reports</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isDefault" {% if template.is_default %}checked{% endif %}>
+                                <label class="form-check-label" for="isDefault">Default template for category</label>
+                            </div>
+                            <div class="form-text">Set as default template for this category and channel.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">Access</h6>
+                        
+                        <div class="mb-3">
+                            <label for="templateVisibility" class="form-label">Visibility</label>
+                            <select class="form-select" id="templateVisibility">
+                                <option value="public" {% if template.visibility == 'public' %}selected{% endif %}>Public</option>
+                                <option value="private" {% if template.visibility == 'private' %}selected{% endif %}>Private</option>
+                            </select>
+                            <div class="form-text">Public templates can be used by all users.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="templateOwner" class="form-label">Owner</label>
+                            <input type="text" class="form-control" id="templateOwner" value="{{ template.owner|default:"admin" }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h6 class="border-bottom pb-2 mb-3">Version History</h6>
+                        
+                        <div class="list-group list-group-flush small">
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-medium">Current Version</span>
+                                    <span class="badge bg-primary">v1.3</span>
+                                </div>
+                                <p class="text-muted mb-0">Updated 2 days ago by admin</p>
+                            </div>
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>Previous Version</span>
+                                    <span class="badge bg-secondary">v1.2</span>
+                                </div>
+                                <p class="text-muted mb-0">Updated 1 week ago by admin</p>
+                            </div>
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>Initial Version</span>
+                                    <span class="badge bg-secondary">v1.0</span>
+                                </div>
+                                <p class="text-muted mb-0">Created 2 weeks ago by admin</p>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-sm btn-outline-primary mt-3">
+                            <i class="fas fa-history me-1"></i>View All Versions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Template Modal -->
+<div class="modal fade" id="testTemplateModal" tabindex="-1" aria-labelledby="testTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="testTemplateModalLabel"><i class="fas fa-paper-plane me-2 text-primary"></i>Test Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="testTemplateForm">
+                    <div class="mb-3">
+                        <label for="testChannel" class="form-label">Send To Channel</label>
+                        <select class="form-select" id="testChannel" required>
+                            <option value="email">Email</option>
+                            <option value="slack">Slack</option>
+                            <option value="teams">Microsoft Teams</option>
+                            <option value="webhook">Webhook</option>
+                        </select>
+                    </div>
+                    
+                    <div class="channel-test-config" id="emailTestConfig">
+                        <div class="mb-3">
+                            <label for="testEmailRecipient" class="form-label">Test Email Address</label>
+                            <input type="email" class="form-control" id="testEmailRecipient" placeholder="your@email.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="useTestData" checked>
+                            <label class="form-check-label" for="useTestData">
+                                Use test data from the Variables tab
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="sendTestBtn">Send Test</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Code editor styles */
+.code-editor-wrapper {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.code-editor {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    tab-size: 4;
+    resize: vertical;
+}
+
+/* Preview container styles */
+.preview-container {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    height: 600px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tabs
+    const templateTabs = document.getElementById('templateTabs');
+    const tabs = new bootstrap.Tab(templateTabs);
+    
+    // Test Template button
+    document.getElementById('testTemplateBtn').addEventListener('click', function() {
+        const testModal = new bootstrap.Modal(document.getElementById('testTemplateModal'));
+        testModal.show();
+    });
+    
+    // Preview functionality
+    const refreshPreview = () => {
+        const templateContent = document.getElementById('templateContent').value;
+        const testData = JSON.parse(document.getElementById('testData').value);
+        
+        // Simple template rendering (this is a very basic implementation)
+        let renderedContent = templateContent;
+        for (const [key, value] of Object.entries(testData)) {
+            if (typeof value !== 'object') {
+                renderedContent = renderedContent.replaceAll(`{{${key}}}`, value);
+            }
+        }
+        
+        // Handle metadata specifically as it's an object
+        if (testData.metadata) {
+            // Replace {{metadata|json_pretty}} with formatted JSON
+            const formattedMetadata = JSON.stringify(testData.metadata, null, 2);
+            renderedContent = renderedContent.replaceAll('{{metadata|json_pretty}}', formattedMetadata);
+        }
+        
+        const previewFrame = document.getElementById('previewFrame');
+        const frameDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        
+        frameDoc.open();
+        frameDoc.write(renderedContent);
+        frameDoc.close();
+    };
+    
+    // Refresh preview when tab is shown
+    document.getElementById('preview-tab').addEventListener('shown.bs.tab', refreshPreview);
+    
+    // Refresh preview button
+    document.getElementById('refreshPreviewBtn').addEventListener('click', refreshPreview);
+    
+    // Send test button
+    document.getElementById('sendTestBtn').addEventListener('click', function() {
+        // In a real app, this would make an API call to send a test notification
+        // For demo purposes, just show a success toast and close the modal
+        showToast('Success', 'Test notification has been sent.', 'success');
+        
+        const testModal = bootstrap.Modal.getInstance(document.getElementById('testTemplateModal'));
+        testModal.hide();
+    });
+    
+    // Save template button
+    document.getElementById('saveTemplateBtn').addEventListener('click', function() {
+        // In a real app, this would make an API call to save the template
+        // For demo purposes, just show a success toast
+        showToast('Success', 'Template has been saved successfully.', 'success');
+    });
+    
+    // Toggle channel test config based on selected channel
+    document.getElementById('testChannel').addEventListener('change', function() {
+        // Hide all configs first
+        document.querySelectorAll('.channel-test-config').forEach(config => {
+            config.style.display = 'none';
+        });
+        
+        // Show the selected config
+        const selectedType = this.value;
+        if (selectedType) {
+            const configElement = document.getElementById(selectedType + 'TestConfig');
+            if (configElement) {
+                configElement.style.display = 'block';
+            }
+        }
+    });
+    
+    // Toast notification function
+    function showToast(title, message, type = 'primary') {
+        const toastEl = document.createElement('div');
+        toastEl.className = 'position-fixed bottom-0 end-0 p-3';
+        toastEl.style.zIndex = '11';
+        toastEl.innerHTML = `
+            <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle text-success' : type === 'danger' ? 'fa-exclamation-circle text-danger' : 'fa-info-circle text-primary'} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toastEl);
+        
+        const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+        toast.show();
+        
+        setTimeout(() => {
+            document.body.removeChild(toastEl);
+        }, 5000);
+    }
+    
+    // Initialize the preview on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default channel test config
+        document.getElementById('emailTestConfig').style.display = 'block';
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Logs | Log Manager{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --success-color: #2ecc71;
+        --warning-color: #f1c40f;
+        --danger-color: #e74c3c;
+        --text-color: #2c3e50;
+        --light-gray: #f8f9fa;
+        --border-color: #dee2e6;
+    }
+
+    .log-container {
+        padding: 2rem;
+    }
+
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-card i {
+        font-size: 2rem;
+        padding: 1rem;
+        border-radius: 50%;
+    }
+
+    .stat-card.total i {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .stat-card.error i {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .stat-card.warning i {
+        background: var(--warning-color);
+        color: var(--text-color);
+    }
+
+    .stat-card.info i {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .stat-card .content h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--text-color);
+    }
+
+    .stat-card .content p {
+        margin: 0.5rem 0 0;
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .search-box {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        padding-left: 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-color);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .button-primary {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .button-primary:hover {
+        background: var(--secondary-color);
+    }
+
+    .button-secondary {
+        background: var(--light-gray);
+        color: var(--text-color);
+    }
+
+    .button-secondary:hover {
+        background: var(--border-color);
+    }
+
+    .log-table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+        background: var(--light-gray);
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    tr:hover {
+        background: var(--light-gray);
+    }
+
+    .severity-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .severity-error {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .severity-warning {
+        background: var(--warning-color);
+        color: var(--text-color);
+    }
+
+    .severity-info {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-read {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .status-unread {
+        background: var(--warning-color);
+        color: var(--text-color);
+    }
+
+    .flag-badge {
+        color: var(--warning-color);
+        cursor: pointer;
+    }
+
+    .flag-badge.flagged {
+        color: var(--danger-color);
+    }
+
+    .bulk-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .bulk-actions select {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .pagination a {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-color);
+        text-decoration: none;
+    }
+
+    .pagination a:hover {
+        background: var(--light-gray);
+    }
+
+    .pagination .active {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    @media (max-width: 768px) {
+        .log-container {
+            padding: 1rem;
+        }
+
+        .stats-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+
+        .button {
+            width: 100%;
+            justify-content: center;
+        }
+
+        table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="log-container">
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <i class="fas fa-list"></i>
+            <div class="content">
+                <h3>Total Logs</h3>
+                <p>{{ total_logs }}</p>
+            </div>
+        </div>
+        <div class="stat-card error">
+            <i class="fas fa-exclamation-circle"></i>
+            <div class="content">
+                <h3>Error Logs</h3>
+                <p>{{ error_logs }}</p>
+            </div>
+        </div>
+        <div class="stat-card warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div class="content">
+                <h3>Warning Logs</h3>
+                <p>{{ warning_logs }}</p>
+            </div>
+        </div>
+        <div class="stat-card info">
+            <i class="fas fa-info-circle"></i>
+            <div class="content">
+                <h3>Info Logs</h3>
+                <p>{{ info_logs }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="filters-section">
+        <form method="get" id="filter-form">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" name="search" placeholder="Search logs..." value="{{ request.GET.search }}">
+            </div>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="severity">Severity</label>
+                    <select name="severity" id="severity">
+                        <option value="">All</option>
+                        {% for value, label in severity_choices %}
+                        <option value="{{ value }}" {% if request.GET.severity == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="source">Source</label>
+                    <select name="source" id="source">
+                        <option value="">All</option>
+                        {% for source in sources %}
+                        <option value="{{ source.id }}" {% if request.GET.source == source.id|stringformat:"s" %}selected{% endif %}>
+                            {{ source.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date_from">Date From</label>
+                    <input type="date" name="date_from" id="date_from" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="filter-group">
+                    <label for="date_to">Date To</label>
+                    <input type="date" name="date_to" id="date_to" value="{{ request.GET.date_to }}">
+                </div>
+                <div class="filter-group">
+                    <label for="category">Category</label>
+                    <input type="text" name="category" id="category" value="{{ request.GET.category }}" placeholder="Filter by category">
+                </div>
+                <div class="filter-group">
+                    <label for="event_id">Event ID</label>
+                    <input type="text" name="event_id" id="event_id" value="{{ request.GET.event_id }}" placeholder="Filter by event ID">
+                </div>
+                <div class="filter-group">
+                    <label for="is_read">Status</label>
+                    <select name="is_read" id="is_read">
+                        <option value="">All</option>
+                        <option value="True" {% if request.GET.is_read == 'True' %}selected{% endif %}>Read</option>
+                        <option value="False" {% if request.GET.is_read == 'False' %}selected{% endif %}>Unread</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="is_flagged">Flag Status</label>
+                    <select name="is_flagged" id="is_flagged">
+                        <option value="">All</option>
+                        <option value="True" {% if request.GET.is_flagged == 'True' %}selected{% endif %}>Flagged</option>
+                        <option value="False" {% if request.GET.is_flagged == 'False' %}selected{% endif %}>Not Flagged</option>
+                    </select>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="button button-primary">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+                <a href="{% url 'logs:log_export' %}?{{ request.GET.urlencode }}" class="button button-secondary">
+                    <i class="fas fa-download"></i> Export CSV
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <form method="post" id="bulk-action-form">
+        {% csrf_token %}
+        <div class="bulk-actions">
+            <select name="action" id="bulk-action">
+                <option value="">Bulk Actions</option>
+                <option value="mark_read">Mark as Read</option>
+                <option value="mark_unread">Mark as Unread</option>
+                <option value="flag">Flag</option>
+                <option value="unflag">Unflag</option>
+                <option value="delete">Delete</option>
+            </select>
+            <button type="submit" class="button button-primary" id="apply-bulk-action">
+                Apply
+            </button>
+        </div>
+
+        <div class="log-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="select-all">
+                        </th>
+                        <th>Timestamp</th>
+                        <th>Source</th>
+                        <th>Severity</th>
+                        <th>Category</th>
+                        <th>Event ID</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Flag</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="log_ids" value="{{ log.id }}" class="log-checkbox">
+                        </td>
+                        <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ log.source.name }}</td>
+                        <td>
+                            <span class="severity-badge severity-{{ log.severity|lower }}">
+                                {{ log.severity }}
+                            </span>
+                        </td>
+                        <td>{{ log.category }}</td>
+                        <td>{{ log.event_id }}</td>
+                        <td>{{ log.message|truncatechars:100 }}</td>
+                        <td>
+                            <span class="status-badge status-{{ log.is_read|yesno:'read,unread' }}">
+                                {{ log.is_read|yesno:'Read,Unread' }}
+                            </span>
+                        </td>
+                        <td>
+                            <i class="fas fa-flag flag-badge {% if log.is_flagged %}flagged{% endif %}"
+                               data-log-id="{{ log.id }}"
+                               title="{{ log.is_flagged|yesno:'Flagged,Not Flagged' }}">
+                            </i>
+                        </td>
+                        <td>
+                            <a href="{% url 'logs:log_entry_detail' log.id %}" class="button button-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center">No logs found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Previous</a>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="active">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}&{{ request.GET.urlencode }}">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when filters change
+    const filterForm = document.getElementById('filter-form');
+    const filterInputs = filterForm.querySelectorAll('select, input[type="date"], input[type="text"]');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', () => filterForm.submit());
+    });
+
+    // Real-time search
+    const searchInput = document.querySelector('input[name="search"]');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterForm.submit();
+        }, 500);
+    });
+
+    // Bulk actions
+    const bulkActionForm = document.getElementById('bulk-action-form');
+    const bulkActionSelect = document.getElementById('bulk-action');
+    const applyBulkAction = document.getElementById('apply-bulk-action');
+    const selectAll = document.getElementById('select-all');
+    const logCheckboxes = document.querySelectorAll('.log-checkbox');
+
+    selectAll.addEventListener('change', function() {
+        logCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+
+    bulkActionSelect.addEventListener('change', function() {
+        applyBulkAction.disabled = !this.value;
+    });
+
+    bulkActionForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const action = bulkActionSelect.value;
+        const selectedLogs = Array.from(logCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+
+        if (!action) {
+            alert('Please select an action');
+            return;
+        }
+
+        if (selectedLogs.length === 0) {
+            alert('Please select at least one log');
+            return;
+        }
+
+        if (action === 'delete' && !confirm('Are you sure you want to delete the selected logs?')) {
+            return;
+        }
+
+        this.submit();
+    });
+
+    // Flag/unflag logs
+    const flagBadges = document.querySelectorAll('.flag-badge');
+    flagBadges.forEach(badge => {
+        badge.addEventListener('click', function() {
+            const logId = this.dataset.logId;
+            const isFlagged = this.classList.contains('flagged');
+            
+            fetch(`/api/logs/entries/${logId}/flag/`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_flagged: !isFlagged })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    this.classList.toggle('flagged');
+                    this.title = isFlagged ? 'Not Flagged' : 'Flagged';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+});
+</script>
+{% endblock %} 

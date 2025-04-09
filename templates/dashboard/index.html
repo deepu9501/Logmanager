@@ -1,0 +1,628 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Log Manager{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 animate__animated animate__fadeInLeft">
+                <h1 class="display-4 fw-bold mb-4">Welcome to Log Manager</h1>
+                <p class="lead mb-4">Monitor your server logs in real-time with advanced analytics, AI-driven insights, and instant notifications.</p>
+                <div class="d-flex gap-3">
+                    <a href="/logs/" class="btn btn-light btn-lg">
+                        <i class="fas fa-search me-2"></i>View Logs
+                    </a>
+                    <a href="/notifications/" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block animate__animated animate__fadeInRight">
+                <div class="position-relative">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3659/3659898.png" alt="Log Management" class="img-fluid" style="max-height: 350px;">
+                    <div class="position-absolute top-0 start-0 translate-middle">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-4 animate__animated animate__pulse animate__infinite">
+                            <i class="fas fa-server fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="position-absolute top-100 start-50 translate-middle">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-4 animate__animated animate__pulse animate__infinite animate__delay-1s">
+                            <i class="fas fa-chart-line fa-2x text-success"></i>
+                        </div>
+                    </div>
+                    <div class="position-absolute top-50 start-100 translate-middle">
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-4 animate__animated animate__pulse animate__infinite animate__delay-2s">
+                            <i class="fas fa-bell fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Overview -->
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold mb-4 border-start border-primary border-4 ps-3">System Overview</h2>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 border-0 stats-card animate__animated animate__fadeInUp">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <i class="fas fa-file-alt fa-lg text-primary"></i>
+                        </div>
+                        <span class="badge bg-success rounded-pill">
+                            <i class="fas fa-arrow-up me-1"></i>12%
+                        </span>
+                    </div>
+                    <h3>{{ total_logs|default:"0" }}</h3>
+                    <p>Total Logs</p>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 border-0 stats-card animate__animated animate__fadeInUp animate__delay-1s">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                            <i class="fas fa-exclamation-triangle fa-lg text-danger"></i>
+                        </div>
+                        <span class="badge bg-danger rounded-pill">
+                            <i class="fas fa-arrow-up me-1"></i>8%
+                        </span>
+                    </div>
+                    <h3>{{ error_count|default:"0" }}</h3>
+                    <p>Errors</p>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: 45%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 border-0 stats-card animate__animated animate__fadeInUp animate__delay-2s">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                            <i class="fas fa-bell fa-lg text-warning"></i>
+                        </div>
+                        <span class="badge bg-success rounded-pill">
+                            <i class="fas fa-arrow-up me-1"></i>5%
+                        </span>
+                    </div>
+                    <h3>{{ notification_count|default:"0" }}</h3>
+                    <p>Notifications</p>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 60%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 border-0 stats-card animate__animated animate__fadeInUp animate__delay-3s">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                            <i class="fas fa-server fa-lg text-info"></i>
+                        </div>
+                        <span class="badge bg-info rounded-pill">
+                            <i class="fas fa-equals me-1"></i>Stable
+                        </span>
+                    </div>
+                    <h3>{{ source_count|default:"0" }}</h3>
+                    <p>Log Sources</p>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: 30%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Health Section -->
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold mb-4 border-start border-warning border-4 ps-3">System Health</h2>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm animate__animated animate__fadeInUp">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Server Status</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light" type="button" id="serverStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="serverStatusDropdown">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-sync-alt me-2"></i>Refresh</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-expand-alt me-2"></i>Expand</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <div class="text-center">
+                                <svg width="150" height="150" viewBox="0 0 150 150">
+                                    <circle cx="75" cy="75" r="60" fill="none" stroke="#f1f5f9" stroke-width="15"/>
+                                    <circle cx="75" cy="75" r="60" fill="none" stroke="#10b981" stroke-width="15" stroke-dasharray="377" stroke-dashoffset="94.25" style="transform:rotate(-90deg);transform-origin:center;"/>
+                                </svg>
+                                <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                    <h3 class="mb-0 fw-bold">75%</h3>
+                                    <p class="mb-0 small text-muted">Overall</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-0">
+                        <div class="col-4 text-center">
+                            <h5 class="mb-0 fw-bold text-success">98%</h5>
+                            <p class="small text-muted mb-0">Uptime</p>
+                        </div>
+                        <div class="col-4 text-center">
+                            <h5 class="mb-0 fw-bold text-warning">65%</h5>
+                            <p class="small text-muted mb-0">CPU</p>
+                        </div>
+                        <div class="col-4 text-center">
+                            <h5 class="mb-0 fw-bold text-info">82%</h5>
+                            <p class="small text-muted mb-0">Memory</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm animate__animated animate__fadeInUp">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Today's Activity</h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-light active">Today</button>
+                        <button type="button" class="btn btn-sm btn-light">Week</button>
+                        <button type="button" class="btn btn-sm btn-light">Month</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div style="height: 250px;">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold mb-4 border-start border-info border-4 ps-3">Analytics</h2>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm animate__animated animate__fadeInUp">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Log Volume Over Time</h5>
+                    <button class="btn btn-sm btn-light" type="button">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;">
+                        <canvas id="logVolumeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm animate__animated animate__fadeInUp animate__delay-1s">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Error Distribution</h5>
+                    <button class="btn btn-sm btn-light" type="button">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                </div>
+                <div class="card-body d-flex justify-content-center align-items-center">
+                    <div style="height: 300px; width: 100%;">
+                        <canvas id="errorDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Logs -->
+<div class="container py-4 mb-5">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2 class="fw-bold mb-0 border-start border-danger border-4 ps-3">Recent Logs</h2>
+            <a href="/logs/" class="btn btn-sm btn-primary">
+                <i class="fas fa-external-link-alt me-1"></i>View All
+            </a>
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm animate__animated animate__fadeInUp">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Source</th>
+                            <th>Level</th>
+                            <th>Message</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in recent_logs|default:'' %}
+                        <tr class="{% if log.level == 'ERROR' %}table-danger{% elif log.level == 'WARNING' %}table-warning{% endif %}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle {% if log.level == 'ERROR' %}bg-danger{% elif log.level == 'WARNING' %}bg-warning{% else %}bg-info{% endif %} me-2" style="width: 8px; height: 8px;"></div>
+                                    <span>{{ log.timestamp|default:"2024-03-26 12:34:56" }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary rounded-pill">{{ log.source.name|default:"Web Server" }}</span>
+                            </td>
+                            <td>
+                                <span class="badge {% if log.level == 'ERROR' %}bg-danger{% elif log.level == 'WARNING' %}bg-warning text-dark{% else %}bg-info{% endif %} rounded-pill">
+                                    {{ log.level|default:"INFO" }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-truncate d-inline-block" style="max-width: 300px;">{{ log.message|default:"Server restarted successfully" }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="/logs/{{ log.id|default:'1' }}/" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No logs found</h5>
+                                    <p class="text-muted">Create your first log source to start tracking logs</p>
+                                    <a href="/admin/logs/logsource/add/" class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-plus me-1"></i>Add Log Source
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        
+                        {% if not recent_logs %}
+                        <!-- Placeholder data for demo purposes -->
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-info me-2" style="width: 8px; height: 8px;"></div>
+                                    <span>2024-03-26 12:34:56</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary rounded-pill">Web Server</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info rounded-pill">INFO</span>
+                            </td>
+                            <td>
+                                <span class="text-truncate d-inline-block" style="max-width: 300px;">Server restarted successfully</span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="/logs/1/" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-warning me-2" style="width: 8px; height: 8px;"></div>
+                                    <span>2024-03-26 11:23:45</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary rounded-pill">Database</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning text-dark rounded-pill">WARNING</span>
+                            </td>
+                            <td>
+                                <span class="text-truncate d-inline-block" style="max-width: 300px;">Database connection pool reaching capacity (85%)</span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="/logs/2/" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-danger me-2" style="width: 8px; height: 8px;"></div>
+                                    <span>2024-03-26 10:12:34</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary rounded-pill">API Gateway</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-danger rounded-pill">ERROR</span>
+                            </td>
+                            <td>
+                                <span class="text-truncate d-inline-block" style="max-width: 300px;">Authentication service timeout after 30s</span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="/logs/3/" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script>
+    // Log Volume Chart
+    const logVolumeCtx = document.getElementById('logVolumeChart').getContext('2d');
+    new Chart(logVolumeCtx, {
+        type: 'line',
+        data: {
+            labels: {% if time_labels %}{{ time_labels|safe }}{% else %}['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:59']{% endif %},
+            datasets: [{
+                label: 'Log Volume',
+                data: {% if log_volume_data %}{{ log_volume_data|safe }}{% else %}[10, 42, 85, 73, 65, 92, 58]{% endif %},
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#fff',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.8)',
+                    padding: 12,
+                    bodyFont: {
+                        size: 13
+                    },
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        drawBorder: false,
+                        color: 'rgba(226, 232, 240, 0.6)'
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Error Distribution Chart
+    const errorDistributionCtx = document.getElementById('errorDistributionChart').getContext('2d');
+    new Chart(errorDistributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Errors', 'Warnings', 'Info'],
+            datasets: [{
+                data: [
+                    {% if error_count %}{{ error_count }}{% else %}24{% endif %}, 
+                    {% if warning_count %}{{ warning_count }}{% else %}38{% endif %}, 
+                    {% if info_count %}{{ info_count }}{% else %}125{% endif %}
+                ],
+                backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.8)',
+                    padding: 12,
+                    bodyFont: {
+                        size: 13
+                    },
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((acc, data) => acc + data, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Activity Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
+            datasets: [
+                {
+                    label: 'Errors',
+                    data: [2, 1, 0, 4, 3, 5, 2, 7],
+                    backgroundColor: '#ef4444',
+                    borderRadius: 4,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.7
+                },
+                {
+                    label: 'Warnings',
+                    data: [5, 3, 2, 6, 4, 8, 7, 3],
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 4,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.7
+                },
+                {
+                    label: 'Info',
+                    data: [12, 8, 6, 15, 19, 22, 18, 25],
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.7
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.8)',
+                    padding: 12,
+                    bodyFont: {
+                        size: 13
+                    },
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stacked: true,
+                    grid: {
+                        drawBorder: false,
+                        color: 'rgba(226, 232, 240, 0.6)'
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                x: {
+                    stacked: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %} 

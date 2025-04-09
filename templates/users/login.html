@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Log Manager{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-3 animate__animated animate__fadeIn">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3659/3659898.png" alt="Log Manager" class="img-fluid mb-3" style="max-height: 70px;">
+                        <h2 class="fw-bold">Welcome Back</h2>
+                        <p class="text-muted">Sign in to your Log Manager account</p>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger animate__animated animate__fadeIn" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Your username and password didn't match. Please try again.
+                    </div>
+                    {% endif %}
+
+                    {% if next %}
+                        {% if user.is_authenticated %}
+                        <div class="alert alert-warning animate__animated animate__fadeIn" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Your account doesn't have access to this page. To proceed,
+                            please login with an account that has access.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info animate__animated animate__fadeIn" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Please login to see this page.
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'login' %}" class="mt-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
+                                <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter your username" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between">
+                                <label for="id_password" class="form-label">Password</label>
+                                <a href="{% url 'password_reset' %}" class="text-decoration-none small">Forgot password?</a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-lock"></i></span>
+                                <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter your password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="remember_me">
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
+                        </div>
+                        <input type="hidden" name="next" value="{{ next }}">
+                        <button type="submit" class="btn btn-primary w-100 mb-3 py-2">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </button>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Don't have an account? <a href="{% url 'signup' %}" class="text-decoration-none fw-medium">Sign up</a></p>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="text-muted small mb-0">By logging in, you agree to our Terms of Service and Privacy Policy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('id_password');
+        const icon = this.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+</script>
+{% endblock %} 

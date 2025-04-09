@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}Log Sources{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Log Sources</h1>
+        <a href="{% url 'logs:create_source' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add New Source
+        </a>
+    </div>
+
+    <!-- Log Sources List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Available Log Sources</h6>
+            <div class="dropdown no-arrow">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                    <div class="dropdown-header">Actions:</div>
+                    <a class="dropdown-item" href="#" id="toggleActiveFilter">Show Inactive Sources</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#" id="exportSourcesCSV">Export to CSV</a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if sources %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="sourcesTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Log Count</th>
+                            <th>Status</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for source in sources %}
+                        <tr class="{% if not source.is_active %}table-secondary{% endif %}">
+                            <td>
+                                <strong>{{ source.name }}</strong>
+                                {% if source.description %}
+                                <p class="small text-muted mb-0">{{ source.description|truncatechars:50 }}</p>
+                                {% endif %}
+                            </td>
+                            <td>{{ source.type }}</td>
+                            <td>{{ source.log_count }}</td>
+                            <td>
+                                {% if source.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ source.updated_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'logs:update_source' source.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'logs:delete_source' source.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    <a href="{% url 'logs:log_list' %}?source={{ source.id }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <div class="text-gray-500 mb-2"><i class="fas fa-exclamation-circle fa-3x"></i></div>
+                <h5>No log sources found</h5>
+                <p>Start by adding your first log source</p>
+                <a href="{% url 'logs:create_source' %}" class="btn btn-primary btn-icon-split">
+                    <span class="icon text-white-50">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span class="text">Add New Source</span>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sources Overview -->
+    {% if sources %}
+    <div class="row">
+        <!-- Source Types Breakdown -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Source Types</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4">
+                        <canvas id="sourceTypesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Source Activity -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Log Activity by Source</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="sourceActivityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Source Details Modal -->
+<div class="modal fade" id="sourceDetailsModal" tabindex="-1" role="dialog" aria-labelledby="sourceDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sourceDetailsModalLabel">Source Details</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body" id="sourceDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable with pagination and search
+        $('#sourcesTable').DataTable({
+            "order": [[4, "desc"]],
+            "pageLength": 10,
+            "language": {
+                "emptyTable": "No log sources available"
+            }
+        });
+
+        // Source Types Chart (if data exists)
+        {% if sources %}
+        var sourceTypeData = {
+            // Convert Django data to JSON to avoid syntax issues
+            labels: {{ source_types|default:'[]'|stringformat:'s'|safe }}.map(type => type.type || 'Unknown'),
+            datasets: [{
+                data: {{ source_types|default:'[]'|stringformat:'s'|safe }}.map(type => type.count || 0),
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+                hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)"
+            }]
+        };
+
+        var typeCtx = document.getElementById("sourceTypesChart");
+        new Chart(typeCtx, {
+            type: 'doughnut',
+            data: sourceTypeData,
+            options: {
+                maintainAspectRatio: false,
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    caretPadding: 10,
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                cutoutPercentage: 70
+            }
+        });
+
+        // Source Activity Chart
+        var activityData = {
+            labels: ['API Server', 'Database', 'Auth Service', 'Web Server', 'Mobile App'],
+            datasets: [{
+                label: "Log Entries",
+                backgroundColor: "rgba(78, 115, 223, 0.05)",
+                borderColor: "rgba(78, 115, 223, 1)",
+                pointRadius: 3,
+                pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointBorderColor: "rgba(78, 115, 223, 1)",
+                pointHoverRadius: 3,
+                pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                data: [25, 15, 8, 12, 5]
+            }]
+        };
+
+        var activityCtx = document.getElementById("sourceActivityChart");
+        new Chart(activityCtx, {
+            type: 'bar',
+            data: activityData,
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 25,
+                        top: 25,
+                        bottom: 0
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            maxTicksLimit: 6
+                        },
+                        maxBarThickness: 25,
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            min: 0,
+                            maxTicksLimit: 5,
+                            padding: 10
+                        },
+                        gridLines: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }]
+                },
+                legend: {
+                    display: false
+                },
+                tooltips: {
+                    titleMarginBottom: 10,
+                    titleFontColor: '#6e707e',
+                    titleFontSize: 14,
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    caretPadding: 10
+                }
+            }
+        });
+        {% endif %}
+
+        // Show/hide inactive sources
+        $('#toggleActiveFilter').click(function(e) {
+            e.preventDefault();
+            var table = $('#sourcesTable').DataTable();
+            var showInactive = $(this).text() === "Show Inactive Sources";
+            
+            if (showInactive) {
+                table.search('').columns().search('').draw();
+                $(this).text("Hide Inactive Sources");
+            } else {
+                table.columns(3).search('Active').draw();
+                $(this).text("Show Inactive Sources");
+            }
+        });
+
+        // Export to CSV functionality
+        $('#exportSourcesCSV').click(function(e) {
+            e.preventDefault();
+            window.location.href = "{% url 'logs:export_sources' %}";
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

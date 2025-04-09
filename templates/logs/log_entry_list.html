@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Log Entries{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --success-color: #2ecc71;
+        --warning-color: #f1c40f;
+        --danger-color: #e74c3c;
+        --text-color: #2c3e50;
+        --light-gray: #f8f9fa;
+        --border-color: #dee2e6;
+    }
+
+    .log-container {
+        padding: 2rem;
+    }
+
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-card i {
+        font-size: 2rem;
+        padding: 1rem;
+        border-radius: 50%;
+    }
+
+    .stat-card.total i {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .stat-card.error i {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .stat-card.warning i {
+        background: var(--warning-color);
+        color: white;
+    }
+
+    .stat-card.info i {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .stat-card .content h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--text-color);
+    }
+
+    .stat-card .content p {
+        margin: 0.5rem 0 0;
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .search-box {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        padding-left: 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-color);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    .filter-group select {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+
+    .log-table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+        background: var(--light-gray);
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    tr:hover {
+        background: var(--light-gray);
+    }
+
+    .severity-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .severity-error {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .severity-warning {
+        background: var(--warning-color);
+        color: var(--text-color);
+    }
+
+    .severity-info {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .pagination a {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-color);
+        text-decoration: none;
+    }
+
+    .pagination a:hover {
+        background: var(--light-gray);
+    }
+
+    .pagination .active {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    @media (max-width: 768px) {
+        .log-container {
+            padding: 1rem;
+        }
+
+        .stats-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .button-primary {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .button-primary:hover {
+        background: var(--secondary-color);
+    }
+
+    .button-secondary {
+        background: var(--light-gray);
+        color: var(--text-color);
+    }
+
+    .button-secondary:hover {
+        background: var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="log-container">
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <i class="fas fa-list"></i>
+            <div class="content">
+                <h3>Total Logs</h3>
+                <p>{{ total_logs }}</p>
+            </div>
+        </div>
+        <div class="stat-card error">
+            <i class="fas fa-exclamation-circle"></i>
+            <div class="content">
+                <h3>Error Logs</h3>
+                <p>{{ error_logs }}</p>
+            </div>
+        </div>
+        <div class="stat-card warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div class="content">
+                <h3>Warning Logs</h3>
+                <p>{{ warning_logs }}</p>
+            </div>
+        </div>
+        <div class="stat-card info">
+            <i class="fas fa-info-circle"></i>
+            <div class="content">
+                <h3>Info Logs</h3>
+                <p>{{ info_logs }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="filters-section">
+        <form method="get" id="filter-form">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" name="search" placeholder="Search logs..." value="{{ request.GET.search }}">
+            </div>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="severity">Severity</label>
+                    <select name="severity" id="severity">
+                        <option value="">All</option>
+                        <option value="ERROR" {% if request.GET.severity == 'ERROR' %}selected{% endif %}>Error</option>
+                        <option value="WARNING" {% if request.GET.severity == 'WARNING' %}selected{% endif %}>Warning</option>
+                        <option value="INFO" {% if request.GET.severity == 'INFO' %}selected{% endif %}>Info</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="source">Source</label>
+                    <select name="source" id="source">
+                        <option value="">All</option>
+                        {% for source in sources %}
+                        <option value="{{ source.id }}" {% if request.GET.source == source.id|stringformat:"s" %}selected{% endif %}>
+                            {{ source.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date_from">Date From</label>
+                    <input type="date" name="date_from" id="date_from" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="filter-group">
+                    <label for="date_to">Date To</label>
+                    <input type="date" name="date_to" id="date_to" value="{{ request.GET.date_to }}">
+                </div>
+            </div>
+            <button type="submit" class="button">Apply Filters</button>
+        </form>
+    </div>
+
+    <div class="log-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Source</th>
+                    <th>Severity</th>
+                    <th>Message</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in log_entries %}
+                <tr>
+                    <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                    <td>{{ log.source.name }}</td>
+                    <td>
+                        <span class="severity-badge severity-{{ log.severity|lower }}">
+                            {{ log.severity }}
+                        </span>
+                    </td>
+                    <td>{{ log.message|truncatechars:100 }}</td>
+                    <td>
+                        <a href="{% url 'logs:log_entry_detail' log.pk %}" class="button">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No logs found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Previous</a>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="active">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}&{{ request.GET.urlencode }}">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when filters change
+    const filterForm = document.getElementById('filter-form');
+    const filterInputs = filterForm.querySelectorAll('select, input[type="date"]');
+    
+    filterInputs.forEach(input => {
+        input.addEventListener('change', () => filterForm.submit());
+    });
+
+    // Real-time search
+    const searchInput = document.querySelector('input[name="search"]');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterForm.submit();
+        }, 500);
+    });
+});
+</script>
+{% endblock %} 

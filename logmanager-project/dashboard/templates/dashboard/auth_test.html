@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "API Authentication Test" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{% trans "API Authentication Test" %}</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            {% trans "Get JWT Token" %}
+        </div>
+        <div class="card-body">
+            <form id="login-form">
+                <div class="mb-3">
+                    <label for="username" class="form-label">{% trans "Username" %}</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">{% trans "Password" %}</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">{% trans "Get Token" %}</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            {% trans "Token Response" %}
+        </div>
+        <div class="card-body">
+            <pre id="token-response">{% trans "No token yet" %}</pre>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            {% trans "Test API Request" %}
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="api-endpoint" class="form-label">{% trans "API Endpoint" %}</label>
+                <input type="text" class="form-control" id="api-endpoint" value="/dashboard/" required>
+            </div>
+            <button id="test-api" class="btn btn-info">{% trans "Test API" %}</button>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            {% trans "API Response" %}
+        </div>
+        <div class="card-body">
+            <pre id="api-response">{% trans "No response yet" %}</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        let accessToken = '';
+        
+        // Handle login form submit
+        $('#login-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            const username = $('#username').val();
+            const password = $('#password').val();
+            
+            $.ajax({
+                url: '{% url "token_obtain_pair" %}',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    username: username,
+                    password: password
+                }),
+                success: function(data) {
+                    accessToken = data.access;
+                    $('#token-response').html(JSON.stringify(data, null, 2));
+                },
+                error: function(xhr) {
+                    $('#token-response').html(JSON.stringify(xhr.responseJSON, null, 2));
+                }
+            });
+        });
+        
+        // Handle API test button click
+        $('#test-api').on('click', function() {
+            const endpoint = $('#api-endpoint').val();
+            
+            $.ajax({
+                url: endpoint,
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken
+                },
+                success: function(data) {
+                    $('#api-response').html(JSON.stringify(data, null, 2));
+                },
+                error: function(xhr) {
+                    $('#api-response').html(JSON.stringify(xhr.responseJSON, null, 2));
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
